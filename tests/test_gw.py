@@ -3,7 +3,6 @@ import src.change as ChangeDetection
 
 def process(original: cv2.Mat, image: cv2.Mat):
     try:
-        # flat.process(image)
         result = ChangeDetection.process(original, image)
     except Exception as e:
         print(e)

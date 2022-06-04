@@ -30,19 +30,19 @@ def process(keyframe: cv2.Mat, image: cv2.Mat):
         (1, 1, 1),
         (1, 1, 1)
     )
-    flooded = cv2.dilate(flooded, np.ones((3, 3)), iterations=2)
-    flooded = cv2.erode(flooded, np.ones((3, 3)), iterations=2)
+    flooded = cv2.dilate(flooded, np.ones((3, 3)), iterations=0)
+    flooded = cv2.erode(flooded, np.ones((3, 3)), iterations=4)
     cv2.imshow('asdfasfdsaf', flooded)
 
     mask = mask[1:-1, 1:-1]
     mask = mask > 0.5
-    print(mask.shape)
-    print(original_keyfr.shape)
-    original_image[~mask] = original_keyfr[~mask]
-    print(original_image.shape)
-    cv2.imshow('RESULT', original_image)
+    result = original_image.copy()
+    result[~mask] = result[~mask] * 0.3 + original_keyfr[~mask] * 0.7
+    cv2.imshow('RESULT', result)
 
-    if np.random.rand() < 0.01:
-        return original_image
+    if np.random.rand() < 0.03:
+        new_keyfr = original_image.copy()
+        new_keyfr[~mask] = original_keyfr[~mask]
+        return new_keyfr
     else:
         return original_keyfr
