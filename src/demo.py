@@ -14,16 +14,16 @@ class Processor:
 
 
     def process(self, image):
-        mask = self.detector.get_mask(image, debug=True)
+        mask = self.detector.get_mask(image)
 
         erased = image.copy()
         alpha = 1.0
         erased[mask] = erased[mask] * (1.0 - alpha) + self.detector.keyframe[mask] * alpha
 
-        bnorm.process(erased)
-
-        # flat.process(erased)
         utils.imshow('Result', erased, True)
+
+        # bnorm.process(erased)
+        # flat.process(erased)
 
         now = time.time()
         if now - self.timestamp > 0.5:
@@ -49,28 +49,29 @@ def run_demo(capture: cv2.VideoCapture):
     detector = Detector(keyframe)
     processor = Processor(detector)
 
-    speed = 5
+    speed = 0
     while True:
         keyframe_update = False
         keycode = cv2.waitKey(1)
         if keycode == 27:
             break
-        elif keycode == ord('d'):
+        elif keycode == ord('w'):
             keyframe_update = True
-        elif keycode == ord('s'):
-            for _ in range(1000):
-                capture.read()
+        elif keycode == ord('q'):
+            speed -= 1
+        elif keycode == ord('e'):
+            speed += 1
         
+
         try:
             for _ in range(speed - 1):
                 capture.read()
             else:
                 _, frame = capture.read()
             frame = cv2.resize(frame, (0, 0), fx=image_size, fy=image_size)
-            
+
             processor.process(frame)
             if keyframe_update:
                 processor.update_keyframe(frame)
         except Exception as e:
             print(e)
-        

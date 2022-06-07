@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+
+import config
 import src.utils as utils
 
 class Detector:
@@ -12,7 +14,7 @@ class Detector:
         self.keyframe[:] = self.keyframe[:] * (1.0 - alpha) + image[:] * alpha
 
 
-    def get_mask(self, image: cv2.Mat, *, debug=False):
+    def get_mask(self, image: cv2.Mat):
         keyframe = self.keyframe
 
         diff_image = cv2.subtract(keyframe, image) + cv2.subtract(image, keyframe)
@@ -40,9 +42,9 @@ class Detector:
         mask = cv2.dilate(mask, np.ones((3, 3)), iterations=2)
         mask = mask > 0.5
 
-        utils.imshow('Input Image', image, debug)
-        utils.imshow('Keyframe Image', keyframe, debug)
-        utils.imshow('Erosion', diff_image, debug)
-        utils.imshow('Mask', np.float32(mask), debug)
+        utils.imshow('Input Image', image, config.debug)
+        utils.imshow('Keyframe Image', keyframe, config.debug)
+        utils.imshow('Erosion', diff_image, config.debug)
+        utils.imshow('Mask', np.float32(mask), config.debug)
         
         return mask
