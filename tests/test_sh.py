@@ -1,7 +1,6 @@
 import pixellib
 from pixellib.torchbackend.instance import instanceSegmentation
 import cv2
-import os, sys
 
 cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 cam.set(3,320)
@@ -13,7 +12,9 @@ target_classes = ins.select_target_classes(person = True)
 while True:
     ret, frame = cam.read()
     cv2.imshow("frame", frame)    
-    result, output = ins.segmentFrame(frame)
+    mask, output = ins.segmentFrame(frame, target_classes)
     cv2.imshow("result", output)        
     if cv2.waitKey(25) == 27:
         break
+
+    
