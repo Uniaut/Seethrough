@@ -1,7 +1,9 @@
+import numpy as np
 import time
 
 import cv2
 from src.change_detection.mask import Detector
+# from src.segmentation.mask import Detector
 
 import src.utils as utils
 import src.postprocessing.flat as flat
@@ -15,10 +17,10 @@ class Processor:
 
     def process(self, image):
         mask = self.detector.get_mask(image)
-
+        keyframe = self.detector.keyframe
         erased = image.copy()
         alpha = 1.0
-        erased[mask] = erased[mask] * (1.0 - alpha) + self.detector.keyframe[mask] * alpha
+        erased[mask] = erased[mask] * (1.0 - alpha) + keyframe[mask] * alpha
 
         # bnorm.process(erased)
         # flat.process(erased)
@@ -28,7 +30,6 @@ class Processor:
             self.timestamp = now
             self.update_keyframe(erased)
         
-
         result = cv2.addWeighted(self.detector.keyframe, 0.7, image, 0.3, 0.0)
         utils.imshow('Result', result, True)
 
@@ -37,11 +38,6 @@ class Processor:
         self.detector.update_keyframe(image)
 
 
-'''
-System is composed of 2 stage:
-1. Get mask and mixture with keyframe
-2. Postprocess to make last stage's image into rectangular image.
-'''
 def run_demo(capture: cv2.VideoCapture):
     _, keyframe = capture.read()
 

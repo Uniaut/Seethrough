@@ -39,7 +39,7 @@ class Detector:
         mask = 1 - mask
         round_kernel = 1 - np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], np.uint8)
         mask = cv2.erode(mask, round_kernel, iterations=0)
-        mask = cv2.dilate(mask, np.ones((3, 3)), iterations=2)
+        mask = cv2.dilate(mask, round_kernel, iterations=2)
         mask = mask > 0.5
 
         utils.imshow('Input Image', image, config.debug)
