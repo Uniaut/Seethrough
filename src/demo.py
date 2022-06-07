@@ -16,11 +16,12 @@ System is composed of 2 stage:
 '''
 def run_demo(capture: cv2.VideoCapture):
     _, keyframe = capture.read()
+    keyframe = cv2.resize(keyframe, (0, 0), fx=0.5, fy=0.5)
     detector = Detector(keyframe)
 
     while True:
         keyframe_update = False
-        keycode = cv2.waitKey(25)
+        keycode = cv2.waitKey(1)
         if keycode == 27:
             break
         elif keycode == ord('d'):
@@ -28,7 +29,7 @@ def run_demo(capture: cv2.VideoCapture):
         
         try:
             _, frame = capture.read()
-            # frame = cv2.resize(frame, (0, 0), fx=1.0, fy=1.0)
+            frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
             process(detector, frame, keyframe_update)
         except Exception as e:
             print(e)

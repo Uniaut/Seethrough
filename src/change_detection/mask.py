@@ -24,18 +24,25 @@ class Detector:
         _, flooded, mask, _ = cv2.floodFill(
             blurred,
             np.zeros((blurred.shape[0] + 2, blurred.shape[1] + 2), np.uint8),
-            (300, 300),
+            (blurred.shape[1] // 2, 5),
             (200, 200, 200),
             (1, 1, 1),
             (1, 1, 1)
         )
         mask = mask[1:-1, 1:-1]
-        mask = cv2.dilate(mask, np.ones((3, 3)), iterations=0)
-        mask = cv2.erode(mask, np.ones((3, 3)), iterations=0)
+        mask = 1 - mask
+        round_kernel = 1 - np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], np.uint8)
+        mask = cv2.erode(mask, round_kernel, iterations=0)
+        mask = cv2.dilate(mask, np.ones((3, 3)), iterations=2)
+        mask = mask > 0.5
 
         result = image.copy()
-        mask = mask > 0.5
-        result[~mask] = result[~mask] * 0.3 + keyframe[~mask] * 0.7
+        result[mask] = result[mask] * 0.3 + keyframe[mask] * 0.7
+
+        if np.random.rand() < 0.02:
+            next_keyframe = image.copy()
+            next_keyframe[mask] = keyframe[mask]
+            self.update_keyframe(next_keyframe)
 
         utils.imshow('Input Image', image, debug)
         utils.imshow('Keyframe Image', keyframe, debug)
