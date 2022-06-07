@@ -1,12 +1,38 @@
+import time
+
 import cv2
 from src.change_detection.mask import Detector
 
+import src.utils as utils
+import src.postprocessing.tk_test as flat
+import src.postprocessing.bnorm as bnorm
 
-def process(detector: Detector, image: cv2.Mat, keyframe_update: bool):
-    if keyframe_update:
-        detector.update_keyframe(image)
-    mask = detector.get_mask(image, debug=True)
+class Processor:
+    def __init__(self, detector):
+        self.detector = detector
+        self.timestamp = time.time()
 
+
+    def process(self, image):
+        mask = self.detector.get_mask(image, debug=True)
+
+        erased = image.copy()
+        alpha = 1.0
+        erased[mask] = erased[mask] * (1.0 - alpha) + self.detector.keyframe[mask] * alpha
+
+        bnorm.process(erased)
+
+        # flat.process(erased)
+        utils.imshow('Result', erased, True)
+
+        now = time.time()
+        if now - self.timestamp > 0.5:
+            self.timestamp = now
+            self.update_keyframe(erased)
+
+
+    def update_keyframe(self, image):
+        self.detector.update_keyframe(image)
 
 
 '''
@@ -16,9 +42,14 @@ System is composed of 2 stage:
 '''
 def run_demo(capture: cv2.VideoCapture):
     _, keyframe = capture.read()
-    keyframe = cv2.resize(keyframe, (0, 0), fx=0.5, fy=0.5)
-    detector = Detector(keyframe)
 
+    image_size = 0.7
+    keyframe = cv2.resize(keyframe, (0, 0), fx=image_size, fy=image_size)
+
+    detector = Detector(keyframe)
+    processor = Processor(detector)
+
+    speed = 5
     while True:
         keyframe_update = False
         keycode = cv2.waitKey(1)
@@ -26,11 +57,20 @@ def run_demo(capture: cv2.VideoCapture):
             break
         elif keycode == ord('d'):
             keyframe_update = True
+        elif keycode == ord('s'):
+            for _ in range(1000):
+                capture.read()
         
         try:
-            _, frame = capture.read()
-            frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
-            process(detector, frame, keyframe_update)
+            for _ in range(speed - 1):
+                capture.read()
+            else:
+                _, frame = capture.read()
+            frame = cv2.resize(frame, (0, 0), fx=image_size, fy=image_size)
+            
+            processor.process(frame)
+            if keyframe_update:
+                processor.update_keyframe(frame)
         except Exception as e:
             print(e)
         

@@ -110,7 +110,7 @@ def process(image: cv2.Mat):
     '''
     for all lines sorted by -rho
     '''
-    lines_sorted = sorted(list(lines), key=lambda l: l[0][0])
+    lines_sorted = [[[0, 0.0]], [[image.shape[1], 0.0]]] + sorted(list(lines), key=lambda l: l[0][0])
     # print(lines_sorted)
 
     lines_dict = dict()
@@ -120,17 +120,16 @@ def process(image: cv2.Mat):
         theta = lines_sorted[i][0][1]
         theta = round(theta * 4 / (2 * np.pi), 0)
         # print('Value: ', rho, theta)
-        if lines_dict.get((rho, theta)) is None:
-            lines_dict[rho, theta] = lines_sorted[i]
+        lines_dict.setdefault((rho, theta), []).append(lines_sorted[i])
     else:
-        lines = list(lines_dict.values())
+        lines = list(np.mean(v, axis=0) for v in lines_dict.values())
 
     show_hough_lines(image, lines, 'compressed')
 
     if len(lines) != 4:
         print('number of lines', len(lines))
         for a, b in lines_dict.items():
-            print(a)
+            print(lines)
         return
     
 
@@ -160,10 +159,11 @@ def process(image: cv2.Mat):
         flag_x, flag_y = p in xsort[:2], p in ysort[:2]
         src_points[point_align[flag_x, flag_y]] = p
 
-    dst_size = 500
-    dst_points = np.float32([[0, 0], [dst_size, 0], [0, 1.414 * dst_size], [dst_size, 1.414 * dst_size]])
+    dst_height = int((src_points[3] - src_points[0])[1] * 1.5)
+    dst_width = int((src_points[3] - src_points[0])[0] * 1.5)
+    dst_points = np.float32([[0, 0], [dst_width, 0], [0, dst_height], [dst_width, dst_height]])
 
     matrix = cv2.getPerspectiveTransform(src_points, dst_points)
-    result = cv2.warpPerspective(image, matrix, (dst_size, int(1.414 * dst_size)))
+    result = cv2.warpPerspective(image, matrix, (dst_width, dst_height))
 
     cv2.imshow('im1reg', result)

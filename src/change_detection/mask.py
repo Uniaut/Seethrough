@@ -8,16 +8,20 @@ class Detector:
 
 
     def update_keyframe(self, image: cv2.Mat):
-        self.keyframe = image
+        alpha = 0.3
+        self.keyframe[:] = self.keyframe[:] * (1.0 - alpha) + image[:] * alpha
 
 
     def get_mask(self, image: cv2.Mat, *, debug=False):
         keyframe = self.keyframe
 
         diff_image = cv2.subtract(keyframe, image) + cv2.subtract(image, keyframe)
+        diff_image = cv2.GaussianBlur(diff_image, (5, 5), 0)
 
         diff_image = np.uint8(diff_image)
-        diff_image = cv2.erode(diff_image, np.ones((3, 3)), iterations=2)
+        diff_image = cv2.erode(diff_image, np.ones((3, 3)), iterations=4)
+        diff_image = cv2.dilate(diff_image, np.ones((3, 3)), iterations=7)
+        diff_image = cv2.erode(diff_image, np.ones((3, 3)), iterations=0)
 
         blurred = diff_image.copy()
         blurred = cv2.GaussianBlur(blurred, (5, 5), 0)
@@ -36,18 +40,9 @@ class Detector:
         mask = cv2.dilate(mask, np.ones((3, 3)), iterations=2)
         mask = mask > 0.5
 
-        result = image.copy()
-        result[mask] = result[mask] * 0.3 + keyframe[mask] * 0.7
-
-        if np.random.rand() < 0.02:
-            next_keyframe = image.copy()
-            next_keyframe[mask] = keyframe[mask]
-            self.update_keyframe(next_keyframe)
-
         utils.imshow('Input Image', image, debug)
         utils.imshow('Keyframe Image', keyframe, debug)
         utils.imshow('Erosion', diff_image, debug)
         utils.imshow('Mask', np.float32(mask), debug)
-        utils.imshow('RESULT', result, debug)
         
         return mask
