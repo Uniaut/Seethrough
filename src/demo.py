@@ -4,7 +4,7 @@ import cv2
 from src.change_detection.mask import Detector
 
 import src.utils as utils
-import src.postprocessing.tk_test as flat
+import src.postprocessing.flat as flat
 import src.postprocessing.bnorm as bnorm
 
 class Processor:
@@ -20,8 +20,6 @@ class Processor:
         alpha = 1.0
         erased[mask] = erased[mask] * (1.0 - alpha) + self.detector.keyframe[mask] * alpha
 
-        utils.imshow('Result', erased, True)
-
         # bnorm.process(erased)
         # flat.process(erased)
 
@@ -29,6 +27,10 @@ class Processor:
         if now - self.timestamp > 0.5:
             self.timestamp = now
             self.update_keyframe(erased)
+        
+
+        result = cv2.addWeighted(self.detector.keyframe, 0.7, image, 0.3, 0.0)
+        utils.imshow('Result', result, True)
 
 
     def update_keyframe(self, image):
