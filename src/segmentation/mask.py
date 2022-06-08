@@ -1,33 +1,41 @@
 import numpy as np
 
 import cv2
-from pixellib.instance import instance_segmentation
+from pixellib.torchbackend.instance import instanceSegmentation
+
+import config
+import src.utils as utils
 
 
-
-instance_seg = instance_segmentation(infer_speed='rapid')
-instance_seg.load_model("tests\mask_rcnn_coco.h5")
-target_classes = instance_seg.select_target_classes(person = True)
-
-class Detector:
-    def __init__(self, keyframe: cv2.Mat):
-        self.keyframe = keyframe
+instance_seg = instanceSegmentation()
+instance_seg.load_model("..\pointrend_resnet50.pkl", detection_speed='rapid')
+target_classes = instance_seg.select_target_classes(person=True)
 
 
-    def update_keyframe(self, image: cv2.Mat):
-        alpha = 0.5
-        self.keyframe[:] = self.keyframe[:] * (1.0 - alpha) + image[:] * alpha
+def get_mask(self, image: cv2.Mat):
+    original_shape = image.shape[:2]
+    mask_shape = (original_shape[1], original_shape[0])
+    image = cv2.resize(image, (90, 60))
 
+    utils.imshow('input_image', image, config.debug)
+    
+    print('image', image.shape)
+    seg_mask, output = instance_seg.segmentFrame(image, target_classes)
+    utils.imshow('outputputput', output, config.debug)
+    print('mask', seg_mask)
+    np_mask = np.float32(seg_mask['masks'])
+    if not np_mask.size:
+        return np.zero(mask_shape, np.bool8)
+    print('mask', np_mask)
+    print(np_mask[:5, :5])
 
-    def get_mask(self, image: cv2.Mat):
-        original_shape = image.shape[:2]
-        cv2.resize(image, (120, 90))
-        print('image', image.shape)
-        seg_mask, output = instance_seg.segmentFrame(image, target_classes)
-        print('mask', seg_mask)
-        np_mask = np.float32(seg_mask['masks'][:, :, 3])
-        upscale_mask = cv2.resize(np_mask, original_shape)
-        print('mask2', upscale_mask.shape)
-        upscale_mask = upscale_mask > 0.5
+    utils.imshow('MASK_', np.float32(np_mask > 0.5), config.debug)
+    
+    upscale_mask = cv2.resize(np_mask, mask_shape)
+    upscale_mask = cv2.dilate(upscale_mask, np.ones((3, 3)), iterations=5)
+    print('mask2', upscale_mask.shape)
+    upscale_mask = upscale_mask > 0.5
+    # print(upscale_mask)
 
-        return np.transpose(upscale_mask)
+    utils.imshow('MASK', np.float32(upscale_mask), config.debug)
+    return upscale_mask
