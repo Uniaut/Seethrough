@@ -11,7 +11,7 @@ def main():
         capture = cv2.VideoCapture('../demo2.mp4')
         capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)
         capture.set(cv2.CAP_PROP_POS_FRAMES, 1000)
-    # capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     
     Demo.run_demo(capture)

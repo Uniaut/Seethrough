@@ -8,11 +8,11 @@ import src.utils as utils
 
 
 instance_seg = instanceSegmentation()
-instance_seg.load_model("..\pointrend_resnet50.pkl", detection_speed='rapid')
+instance_seg.load_model("..\pointrend_resnet50.pkl", detection_speed='fast')
 target_classes = instance_seg.select_target_classes(person=True)
 
 
-def get_mask(self, image: cv2.Mat):
+def get_mask(image: cv2.Mat, *_):
     original_shape = image.shape[:2]
     mask_shape = (original_shape[1], original_shape[0])
     image = cv2.resize(image, (90, 60))
@@ -22,14 +22,15 @@ def get_mask(self, image: cv2.Mat):
     print('image', image.shape)
     seg_mask, output = instance_seg.segmentFrame(image, target_classes)
     utils.imshow('outputputput', output, config.debug)
-    print('mask', seg_mask)
+    # print('mask', seg_mask)
     np_mask = np.float32(seg_mask['masks'])
     if not np_mask.size:
-        return np.zero(mask_shape, np.bool8)
-    print('mask', np_mask)
-    print(np_mask[:5, :5])
+        return np.zeros(original_shape, np.bool8)
+    print('mask', np_mask.shape)
+    np_mask = np.sum(np_mask, axis=2)
 
     utils.imshow('MASK_', np.float32(np_mask > 0.5), config.debug)
+    print(np_mask[:5, :5])
     
     upscale_mask = cv2.resize(np_mask, mask_shape)
     upscale_mask = cv2.dilate(upscale_mask, np.ones((3, 3)), iterations=5)
