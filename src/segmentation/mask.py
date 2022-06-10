@@ -19,22 +19,18 @@ def get_mask(image: cv2.Mat, *_):
 
     utils.imshow('input_image', image, config.debug)
     
-    print('image', image.shape)
     seg_mask, output = instance_seg.segmentFrame(image, target_classes)
     utils.imshow('outputputput', output, config.debug)
     # print('mask', seg_mask)
     np_mask = np.float32(seg_mask['masks'])
     if not np_mask.size:
         return np.zeros(original_shape, np.bool8)
-    print('mask', np_mask.shape)
     np_mask = np.sum(np_mask, axis=2)
 
+    np_mask = cv2.dilate(np_mask, np.ones((3, 3)), iterations=1)
     utils.imshow('MASK_', np.float32(np_mask > 0.5), config.debug)
-    print(np_mask[:5, :5])
     
     upscale_mask = cv2.resize(np_mask, mask_shape)
-    upscale_mask = cv2.dilate(upscale_mask, np.ones((3, 3)), iterations=5)
-    print('mask2', upscale_mask.shape)
     upscale_mask = upscale_mask > 0.5
     # print(upscale_mask)
 
