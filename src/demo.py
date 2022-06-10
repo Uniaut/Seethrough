@@ -10,8 +10,6 @@ import config
 import src.change_detection.mask as ChangeMask
 import src.segmentation.mask as SegMask
 import src.utils as utils
-import src.postprocessing.flat as flat
-import src.postprocessing.bnorm as bnorm
 
 class Processor:
     def __init__(self, get_mask, keyframe):
@@ -34,9 +32,6 @@ class Processor:
         utils.imshow('Keyframe', self.keyframe, result_mode)
 
         mask = self.get_mask(image, self.keyframe)
-
-        # bnorm.process(erased)
-        # flat.process(erased)
 
         now = time.time()
         if now - self.timestamp > 0.05:
@@ -61,7 +56,6 @@ def run_demo(capture: cv2.VideoCapture):
         detector = ChangeMask.get_mask
     processor = Processor(detector, keyframe)
 
-    timestamp = time.time()
     speed = 1
     while True:
         keycode = cv2.waitKey(1)
